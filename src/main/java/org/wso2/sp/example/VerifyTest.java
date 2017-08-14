@@ -22,10 +22,11 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.wso2.msf4j.Request;
 import org.wso2.sp.example.exception.TestNotFoundException;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -44,8 +45,8 @@ import java.util.Map;
                 description = "Stream Processor Test Results in-memory persisting service",
                 license = @License(name = "Apache 2.0", url = "http://www.apache.org/licenses/LICENSE-2.0"),
                 contact = @Contact(
-                        name = "Chaminda Jayawardena",
-                        email = "chaminda@wso2.com",
+                        name = "WSO2 Pvt Ltd",
+                        email = "analytics-team@wso2.com",
                         url = "http://wso2.com"
                 ))
 )
@@ -53,7 +54,8 @@ import java.util.Map;
 @Path("/testresults")
 public class VerifyTest {
 
-    private Map<String, Result> testResults = new HashMap<>();
+    private static final Logger log = LoggerFactory.getLogger(VerifyTest.class);
+    private Map<String, Event> testResults = new HashMap<>();
 
     public VerifyTest(){
 
@@ -69,16 +71,19 @@ public class VerifyTest {
             @ApiResponse(code = 200, message = "Valid stock item found"),
             @ApiResponse(code = 404, message = "Stock item not found")})
     public Response getTestResults(@ApiParam(value = "testCaseName", required = true)
-            @PathParam("testCaseName") String testCaseName) throws TestNotFoundException {
+                                   @PathParam("testCaseName") String testCaseName) throws TestNotFoundException {
 
         //@CookieParam("testCaseName") String testCaseName
-        System.out.println("Getting Test results using PathParam...");
-        Result result = testResults.get(testCaseName);
+        log.info("Getting Test results using PathParam...");
+        Event result = testResults.get(testCaseName);
         if (result == null) {
-            throw new TestNotFoundException("TestCase " + testCaseName + " Not Found");
+            //throw new TestNotFoundException("TestCase " + testCaseName + " Not Found");
+            log.warn("TestCase " + testCaseName + " Not Found");
+            return Response.status(404).build();
         }
         return Response.ok().entity(result).build();
     }
+//Good Read: https://stackoverflow.com/questions/28229017/jackson-not-consuming-the-json-root-element
 
     @POST
     @Path("/")
@@ -86,13 +91,28 @@ public class VerifyTest {
     @ApiOperation(
             value = "Add a test result",
             notes = "Add a valid method name and res")
-    public void addResult(@ApiParam(value = "Result object", required = true) Result result) {
+    public void addResult(@ApiParam(value = "Result object", required = true) EventWrapper event, @ApiParam(value = "className string", required = true)
+                          @HeaderParam("className") String className, @Context Request request) {
         //, @Context Request request
-        System.out.println("POST invoked");
-        //request.getHeaders().getAll().forEach(entry -> System.out.println(entry.getName() + "=" + entry.getValue()));
-        String testCaseName = result.getTestCaseName();
-        testResults.put(testCaseName,result);
-        System.out.println("result "+ testResults.get(testCaseName));
+        log.info("POST invoked");
+        request.getHeaders().getAll().forEach(entry -> System.out.println(entry.getName() + "=" + entry.getValue()));
+        System.out.println("body==="+request.isEmpty());
+        String testCaseName = className;
+       /* if (testResults.containsKey(testCaseName)) {
+            log.info("events exist for the test, not adding new.");
+           //TODO: if events are already exist for the test
+        }*/
+        testResults.put(testCaseName,event.event);
+        log.info("ClassName: "+ testCaseName);
+        log.info("event: "+testResults.get(testCaseName));
+
+    }
+
+    @POST
+    @Path("/clear")
+    public void clearMap(){
+        log.info("event map clearing...");
+        testResults.clear();
     }
 
     /*GET
