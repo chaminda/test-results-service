@@ -83,7 +83,6 @@ public class VerifyTest {
         }
         return Response.ok().entity(result).build();
     }
-//Good Read: https://stackoverflow.com/questions/28229017/jackson-not-consuming-the-json-root-element
 
     @POST
     @Path("/")
