@@ -63,7 +63,7 @@
     </dependencies>
 
     <properties>
-        <microservice.mainClass>org.wso2.sp.example.Application</microservice.mainClass>
+        <microservice.mainClass>org.wso2.sp.event.Application</microservice.mainClass>
     </properties>
 
 </project>

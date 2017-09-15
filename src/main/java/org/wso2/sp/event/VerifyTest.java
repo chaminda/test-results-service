@@ -14,28 +14,35 @@
  * limitations under the License.
  */
 
-package org.wso2.sp.example;
+package org.wso2.sp.event;
 
-import io.swagger.annotations.*;
-
-import javax.ws.rs.*;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
-
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import io.swagger.annotations.ApiResponse;
+import io.swagger.annotations.ApiResponses;
+import io.swagger.annotations.Contact;
+import io.swagger.annotations.Info;
+import io.swagger.annotations.License;
+import io.swagger.annotations.SwaggerDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.msf4j.Request;
-import org.wso2.sp.example.exception.TestNotFoundException;
-
+import org.wso2.sp.event.exception.TestNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
 
-/**
- * This is the Microservice resource class.
- * See <a href="https://github.com/wso2/msf4j#getting-started">https://github.com/wso2/msf4j#getting-started</a>
- * for the usage of annotations.
- *
- * @since 1.0.0-SNAPSHOT
+/**.
+ * VerifyTest class
  */
 
 @Api(value = "testresults")
@@ -57,7 +64,7 @@ public class VerifyTest {
     private static final Logger log = LoggerFactory.getLogger(VerifyTest.class);
     private Map<String, Event> testResults = new HashMap<>();
 
-    public VerifyTest(){
+    public VerifyTest() {
 
     }
 
@@ -75,13 +82,17 @@ public class VerifyTest {
 
         //@CookieParam("testCaseName") String testCaseName
         log.info("Getting Test results using PathParam...");
-        Event result = testResults.get(testCaseName);
-        if (result == null) {
-            //throw new TestNotFoundException("TestCase " + testCaseName + " Not Found");
-            log.warn("TestCase " + testCaseName + " Not Found");
-            return Response.status(404).build();
+        Event result;
+        if (testResults.containsKey(testCaseName)) {
+            result = testResults.get(testCaseName);
+            if (result == null) {
+                log.warn("No events found for : " + testCaseName);
+                return Response.status(404).build();
+            }
+            return Response.ok().entity(result).build();
         }
-        return Response.ok().entity(result).build();
+        log.warn("Not found testcase : " + testCaseName);
+        return Response.status(404).build();
     }
 
     @POST
@@ -91,25 +102,25 @@ public class VerifyTest {
             value = "Add a test result",
             notes = "Add a valid method name and res")
     public void addResult(@ApiParam(value = "Result object", required = true) EventWrapper event, @ApiParam(value = "className string", required = true)
-                          @HeaderParam("className") String className, @Context Request request) {
+    @HeaderParam("className") String className, @Context Request request) {
         //, @Context Request request
         log.info("POST invoked");
         request.getHeaders().getAll().forEach(entry -> System.out.println(entry.getName() + "=" + entry.getValue()));
-        System.out.println("body==="+request.isEmpty());
+        System.out.println("body===" + request.isEmpty());
         String testCaseName = className;
        /* if (testResults.containsKey(testCaseName)) {
             log.info("events exist for the test, not adding new.");
            //TODO: if events are already exist for the test
         }*/
-        testResults.put(testCaseName,event.event);
-        log.info("ClassName: "+ testCaseName);
-        log.info("event: "+testResults.get(testCaseName));
+        testResults.put(testCaseName, event.event);
+        log.info("ClassName: " + testCaseName);
+        log.info("event: " + testResults.get(testCaseName));
 
     }
 
     @POST
     @Path("/clear")
-    public void clearMap(){
+    public void clearMap() {
         log.info("event map clearing...");
         testResults.clear();
     }

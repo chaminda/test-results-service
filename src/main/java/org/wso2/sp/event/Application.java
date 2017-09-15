@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package org.wso2.sp.example;
+package org.wso2.sp.event;
 
 import org.wso2.msf4j.MicroservicesRunner;
 

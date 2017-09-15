@@ -1,9 +1,9 @@
-package org.wso2.sp.example;
+package org.wso2.sp.event;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-/**
- * Created by chaminda on 8/3/17.
+/**.
+ * Result class
  */
 
 @XmlRootElement
